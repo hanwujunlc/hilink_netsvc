@@ -108,13 +108,16 @@ int hilink_msg_handler(const char *buf, int len) {
 			}
 			if (-1 == _flags) {
 				hilink_log("hilink_msg_handler receive error data!\n");
-				while (i >= 0) {
-					free(svc_info[i]);
-				}
-				return -1;
-			}
- 			config_profile(svc_info, l);
+				
+			} else {
+ 				config_profile(svc_info, l);
+ 			}
 
+			while (i-- > 0) {
+				free((char *)svc_info[i].st);
+				free((char *)svc_info[i].svc_id);
+			}
+			return _flags;
 
 		} else if (0 == strcmp(cmd, "disable")) {
 			hilink_log("hilink_msg_handler disable !");
