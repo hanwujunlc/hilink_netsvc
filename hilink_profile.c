@@ -16,10 +16,26 @@ static int _put_respone_flags = -1;
 static char _get_data[1024];
 static char _put_data[1024];
 
+int findChildCnt(char* buf, char* str)
+{
+    int len = strlen(str);
+    int cnt = 0;
+    while (buf = strstr(buf, str))
+    {
+        cnt++; 
+        buf += len;
+    }
+    return cnt;
+}
+
+
 int hilink_msg_handler(const char *buf, int len) {
 	//parse buf call json api
 
-	msg_send("received", strlen("received") + 1);
+	// msg_send("received", strlen("received"));
+	// char b_buf[len];
+	// b64_pton(buf, b_buf, len);
+
 	hilink_log("hilink_msg_handler receive msg length %d, buf = %s  !", len, buf);
 	void *obj = my_hilink_json_parse(buf);
 	//call my_hilink_json_get_string_value(void* obj, char* name, unsigned int *len);
@@ -31,15 +47,74 @@ int hilink_msg_handler(const char *buf, int len) {
 		if (0 == strcmp(cmd, "start")) {
 			hilink_log("hilink_msg_handler start !");
 			char *svc_list = my_hilink_json_get_string_value(obj, "svc_list", 0);
-			hilink_log("hilink_msg_handler svc_list ! = %s", svc_list);
+			hilink_log("hilink_msg_handler svc_list = %s !", svc_list);
 
-			int len = strlen(svc_list);
-			char base_buf[len];
-			b64_pton(svc_list, base_buf, len);
+			int num; 
+			my_hilink_json_get_string_value(obj, "svc_list", &num);
+			hilink_log("hilink_msg_handler svc_list length = %d !", num);
+			// int len = strlen(svc_list);
+			// char base_buf[len];
+			// b64_pton(svc_list, base_buf, len);
 
 			//TODO base_buf -> svc_info_t[]
-			svc_info_t svcs[5];
- 			config_profile(svcs, 5);
+			char *str = svc_list;
+			int l = findChildCnt(svc_list, "sid:");
+			svc_info_t svc_info[l];
+			int i = 0;
+			char *begin;
+			int _flags = 0;
+			while (NULL != (begin = strstr(str, "sid:"))) {
+
+				char *sid_begin  = strchr(begin, ':') + 1;
+				if (NULL == sid_begin){
+					_flags = -1;
+					break;
+				}
+				char *sid_end = strchr(sid_begin, ',');
+				if (NULL == sid_end) {
+					_flags = -1;
+					break;
+				}
+				svc_info[i].svc_id = (char *)malloc(sizeof(char) * 32);
+				bzero((char *)svc_info[i].svc_id, 32);
+				memcpy((char *)svc_info[i].svc_id, sid_begin, sid_end - sid_begin);
+				hilink_log("svc_info[%d].svc_id = %s \n", i, svc_info[i].svc_id);
+				char *stype = strstr(sid_end, "stype:");
+				if (NULL == stype) {
+					_flags = -1;
+					break;
+				}
+				char *stype_begin  = strchr(stype, ':') + 1;
+				if (NULL == stype_begin) {
+					_flags = -1;
+					break;
+				}
+				char *stype_end = strchr(stype_begin, ';');
+				if (NULL == stype_end) {
+					_flags = -1;
+					break;
+				}
+				svc_info[i].st = (char *)malloc(sizeof(char) * 32);
+				bzero((char *)svc_info[i].st, 32);
+				memcpy((char *)svc_info[i].st, stype_begin, stype_end - stype_begin);
+				hilink_log("svc_info[%d].st = %s \n", i, svc_info[i].st);
+				
+				str = stype_end + 1;
+				++i;
+				if (i >= l) {
+					hilink_log("hilink_msg_handler data length error!\n");
+					break;
+				}
+			}
+			if (-1 == _flags) {
+				hilink_log("hilink_msg_handler receive error data!\n");
+				while (i >= 0) {
+					free(svc_info[i]);
+				}
+				return -1;
+			}
+ 			config_profile(svc_info, l);
+
 
 		} else if (0 == strcmp(cmd, "disable")) {
 			hilink_log("hilink_msg_handler disable !");
@@ -111,7 +186,7 @@ int hilink_get_char_state(const char* svc_id, const char* in, unsigned int in_le
 
 	memcpy(*out, _get_data, strlen(_get_data) + 1);
 	*out_len = strlen(_get_data);
-
+	bzero(_get_data, strlen(_get_data) + 1);
 	return 0;
 }
 
@@ -138,6 +213,8 @@ int hilink_put_char_state(const char* svc_id,
 	while(0 == _put_respone_flags) {
 		sleep(1);
 	}
+	hilink_log("hilink_put_char_state state = %s", _put_data);
+	bzero(_put_data, strlen(_put_data) + 1);
 
 	//memcpy(*out, _put_data, strlen(_put_data) + 1);
 	//out_len = strlen(_put_data);
