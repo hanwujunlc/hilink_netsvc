@@ -95,7 +95,7 @@ int config_network(void) {
 	st_pkt0len.len_aes  = WIFI_RX_LEN0_AES;
 	hilink_link_set_pkt0len(&st_pkt0len);
 
-	if (fetch_mac("eth0", mac) == -1) {
+	if (fetch_mac("wlan0", mac) == -1) {
 		hilink_log("fetch_mac error!");
 		return -1;
 	}
@@ -122,14 +122,15 @@ static int term_flag = 0;
 
 static void *profile_proc(void *arg) {
 	int ret;
-
     while(!term_flag)
     {
         ret = hilink_m2m_process();
-        if(ret != 0) hilink_log("hilink_m2m_process error: %d", ret);
 
+        if(ret != 0) hilink_log("hilink_m2m_process error: %d", ret);
 		ret = -1;
-		struct timespec wait_time = { 0, 1000 * 1000 * 50 };
+		struct timeval now;
+		gettimeofday(&now, NULL);
+		struct timespec wait_time = { now.tv_sec, now.tv_usec * 1000 + 1000 * 1000 * 50 };
 		pthread_mutex_lock(&term_lock);
 		while (term_flag == 0) {
 		  ret = pthread_cond_timedwait(&term_cond, &term_lock, &wait_time) != ETIMEDOUT ? 0 : -1;
@@ -157,7 +158,7 @@ static dev_info_t dev_tv = {
 
 int config_profile(svc_info_t *svcs, int svc_len) {
 	char mac[6], mac_str[32], sn[32];
-	if (fetch_mac("eth0", mac) == -1) {
+	if (fetch_mac("wlan0", mac) == -1) {
 		hilink_log("fetch_mac error!");
 		return -1; 
 	}
@@ -178,8 +179,11 @@ int config_profile(svc_info_t *svcs, int svc_len) {
 		1,
 	};
 
-	if (hilink_m2m_init(&dev, svcs, svc_len) != 0) {
-		hilink_log("hilink_m2m_init error!");
+	//int ret = hilink_m2m_init(&dev,  (svc_info_t*)&svc_aircon, 6);
+	int ret = hilink_m2m_init(&dev, svcs, svc_len);
+	
+	if (ret != 0) {
+		hilink_log("hilink_m2m_init error %d!", ret);
 		return -1; 
 	}
 

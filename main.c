@@ -33,6 +33,7 @@ static void msg_handler(const char *buf, int len) {
 	if (strstr(buf, "profile")) hilink_msg_handler(buf, len);
 	else if (strstr(buf, "network")) handle_network_msg(buf, len);
 	else hilink_log("unexcepted msg received!!!");
+  bzero(buf, len);
 }
 
 static void sig_handler(int sig_num) {

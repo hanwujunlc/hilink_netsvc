@@ -17,7 +17,18 @@ void* my_hilink_json_parse(const char *value) {
 	Json::Value::Members members = root.getMemberNames();
 	for (Json::Value::Members::iterator iter = members.begin(); iter != members.end(); iter++) {
 		string key = *iter;
-		string value = root[key].asString();
+		string value;
+		if (root[key].isString()) {
+			value = root[key].asString();
+		} else if (root[key].isInt()) {
+			char buf[10];
+			sprintf(buf, "%d", root[key].asInt());
+			value = buf; 
+		} else {
+			value = "";
+			printf("my_hilink_json_parse other data !\n");
+		}
+		
 		hilink_members.insert(std::pair<string, string>(key, value));
 	}
 
@@ -37,5 +48,6 @@ int my_hilink_json_get_number_value(void* object, char* name, int *value) {
 
 void my_hilink_json_delete(void* object) {
 	map<string, string> *members = (map<string, string> *)object;
-	members->clear();
+	if (members && !members->empty())
+		members->clear();
 }

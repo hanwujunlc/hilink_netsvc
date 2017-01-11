@@ -32,10 +32,6 @@ int findChildCnt(char* buf, char* str)
 int hilink_msg_handler(const char *buf, int len) {
 	//parse buf call json api
 
-	// msg_send("received", strlen("received"));
-	// char b_buf[len];
-	// b64_pton(buf, b_buf, len);
-
 	hilink_log("hilink_msg_handler receive msg length %d, buf = %s  !", len, buf);
 	void *obj = my_hilink_json_parse(buf);
 	//call my_hilink_json_get_string_value(void* obj, char* name, unsigned int *len);
@@ -45,21 +41,20 @@ int hilink_msg_handler(const char *buf, int len) {
 
 	if (0 == strcmp(type, "profile")) {
 		if (0 == strcmp(cmd, "start")) {
-			hilink_log("hilink_msg_handler start !");
+			//hilink_log("hilink_msg_handler start !");
 			char *svc_list = my_hilink_json_get_string_value(obj, "svc_list", 0);
-			hilink_log("hilink_msg_handler svc_list = %s !", svc_list);
+			//hilink_log("hilink_msg_handler svc_list = %s !", svc_list);
 
-			int num; 
-			my_hilink_json_get_string_value(obj, "svc_list", &num);
-			hilink_log("hilink_msg_handler svc_list length = %d !", num);
-			// int len = strlen(svc_list);
-			// char base_buf[len];
-			// b64_pton(svc_list, base_buf, len);
-
-			//TODO base_buf -> svc_info_t[]
-			char *str = svc_list;
-			int l = findChildCnt(svc_list, "sid:");
-			svc_info_t svc_info[l];
+			int len = strlen(svc_list);
+			char base_buf[len];
+			b64_pton(svc_list, base_buf, len);
+			//hilink_log("hilink_msg_handler svc_list = %s !", base_buf);
+			
+			char *str = base_buf;
+			int l = findChildCnt(base_buf, "sid:");
+			hilink_log("hilink_msg_handler findChildCnt = %d !", l);
+			svc_info_t *svc_info = (svc_info_t *)malloc(sizeof(svc_info_t) * l);
+			//svc_info_t svc_info[l];
 			int i = 0;
 			char *begin;
 			int _flags = 0;
@@ -102,7 +97,7 @@ int hilink_msg_handler(const char *buf, int len) {
 				str = stype_end + 1;
 				++i;
 				if (i >= l) {
-					hilink_log("hilink_msg_handler data length error!\n");
+					//hilink_log("hilink_msg_handler data length error!\n");
 					break;
 				}
 			}
@@ -110,14 +105,19 @@ int hilink_msg_handler(const char *buf, int len) {
 				hilink_log("hilink_msg_handler receive error data!\n");
 				
 			} else {
- 				config_profile(svc_info, l);
+				if (0 != i ) {
+					hilink_log("l = %d", l);
+ 					config_profile(svc_info, l);
+ 				}
  			}
 
 			while (i-- > 0) {
-				free((char *)svc_info[i].st);
-				free((char *)svc_info[i].svc_id);
+				//hilink_log("hilink_msg_handler i = %d", i);
+				//free((char *)svc_info[i].st);
+				//free((char *)svc_info[i].svc_id);
 			}
-			return _flags;
+			//free(svc_info);
+			// _flags;
 
 		} else if (0 == strcmp(cmd, "disable")) {
 			hilink_log("hilink_msg_handler disable !");
@@ -125,10 +125,10 @@ int hilink_msg_handler(const char *buf, int len) {
 		} else if (0 == strcmp(cmd, "upload")) {
 			char *svc_id = my_hilink_json_get_string_value(obj, "svc_id", 0);
 			char *payload = my_hilink_json_get_string_value(obj, "payload", 0);
-			int len = strlen(payload);
-			char base_buf[len];
-			b64_pton(payload, base_buf, len);
-			hilink_upload_char_state(svc_id, base_buf, strlen(base_buf));
+			//int len = strlen(payload);
+			//char base_buf[len];
+			//b64_pton(payload, base_buf, len);
+			hilink_upload_char_state(svc_id, payload, strlen(payload));
 
 		} else if (0 == strcmp(cmd, "get_char_state_response")) {
 			char *svc_id = my_hilink_json_get_string_value(obj, "svc_id", 0);

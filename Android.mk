@@ -29,6 +29,6 @@ LOCAL_LDFLAGS	:= -pie -fpie
 LOCAL_SHARED_LIBRARIES := libhilinkjson
 LOCAL_STATIC_LIBRARIES := libhilinkdevicesdk
 #LOCAL_LDFLAGS	+= libhilinkdevicesdk.so libhilinkjson.so
-LOCAL_CFLAGS := -pie -FPIE
+LOCAL_CFLAGS := -pie -FPIE -g
 LOCAL_MODULE := hilink_netsvc
 include $(BUILD_EXECUTABLE)

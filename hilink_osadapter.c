@@ -148,10 +148,14 @@ int hilink_gettime(unsigned long* ms) {
 *******************************************************************************/
 
 int hilink_rand(void) {
-	return rand();
+
+	int i = rand();
+	printf("hilink_rand  i = %d\n", i);
+	return i;
 }
 
 void hilink_srand(unsigned int value) {
+	printf("hilink_srand  value = %d\n", value);
 	srand(value);
 }
 
@@ -181,13 +185,13 @@ int hilink_read_flash(char* buf, unsigned int len) {
 	FILE *fp = fopen("/data/misc/hilink/m2m_info.txt","rb+");
 	if(fp == NULL) {
 		printf("open file failed!\r\n");
-		return -1;
+		return 0;
 	}
 
 	if(fread(buf, len, 1, fp) != 1) {
 		printf("read flash Error!\r\n");
     	fclose(fp);
-		return -1;
+		return 0;
 	}
 
 	fclose(fp);
@@ -274,7 +278,7 @@ int hilink_printf(const char* format, ...) {
 
     if (!daemon_flag) {
         fprintf(stderr, "%s", msg);
-        fprintf(stderr, "%s", "\n");
+        //fprintf(stderr, "%s", "\n");
         fflush(stderr);
     }
     else LOGI("%s", msg);
@@ -335,7 +339,7 @@ int hilink_json_get_number_value(void* object, \
 }
 
 void hilink_json_delete(void* object) {
-	hilink_json_delete(object);
+	my_hilink_json_delete(object);
 }
 
 int hilink_bi_get_cr(char *buf, unsigned int size) {
