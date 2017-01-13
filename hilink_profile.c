@@ -35,14 +35,15 @@ int hilink_msg_handler(const char *buf, int len) {
 	hilink_log("hilink_msg_handler receive msg length %d, buf = %s  !", len, buf);
 	void *obj = my_hilink_json_parse(buf);
 	//call my_hilink_json_get_string_value(void* obj, char* name, unsigned int *len);
-	char *cmd = my_hilink_json_get_string_value(obj, "cmd", 0);
-	char *type = my_hilink_json_get_string_value(obj, "type", 0); 
+	int length;
+	char *cmd = my_hilink_json_get_string_value(obj, "cmd", &length);
+	char *type = my_hilink_json_get_string_value(obj, "type", &length); 
 	hilink_log("cmd =  %s, type = %s  !", cmd, type);
 
 	if (0 == strcmp(type, "profile")) {
 		if (0 == strcmp(cmd, "start")) {
 			//hilink_log("hilink_msg_handler start !");
-			char *svc_list = my_hilink_json_get_string_value(obj, "svc_list", 0);
+			char *svc_list = my_hilink_json_get_string_value(obj, "svc_list", &length);
 			//hilink_log("hilink_msg_handler svc_list = %s !", svc_list);
 
 			int len = strlen(svc_list);
@@ -123,24 +124,24 @@ int hilink_msg_handler(const char *buf, int len) {
 			hilink_log("hilink_msg_handler disable !");
 			unconfig_profile();
 		} else if (0 == strcmp(cmd, "upload")) {
-			char *svc_id = my_hilink_json_get_string_value(obj, "svc_id", 0);
-			char *payload = my_hilink_json_get_string_value(obj, "payload", 0);
+			char *svc_id = my_hilink_json_get_string_value(obj, "svc_id", &length);
+			char *payload = my_hilink_json_get_string_value(obj, "payload", &length);
 			//int len = strlen(payload);
 			//char base_buf[len];
 			//b64_pton(payload, base_buf, len);
 			hilink_upload_char_state(svc_id, payload, strlen(payload));
 
 		} else if (0 == strcmp(cmd, "get_char_state_response")) {
-			char *svc_id = my_hilink_json_get_string_value(obj, "svc_id", 0);
-			char *payload = my_hilink_json_get_string_value(obj, "payload", 0);
+			char *svc_id = my_hilink_json_get_string_value(obj, "svc_id", &length);
+			char *payload = my_hilink_json_get_string_value(obj, "payload", &length);
 			_get_respone_flags = 1;
 
 			bzero(_get_data, 1024);
 			memcpy(_get_data, payload, strlen(payload) + 1);
 
 		} else if (0 == strcmp(cmd, "put_char_state_response")) {
-			char *svc_id = my_hilink_json_get_string_value(obj, "svc_id", 0);
-			char *state = my_hilink_json_get_string_value(obj, "state", 0);
+			char *svc_id = my_hilink_json_get_string_value(obj, "svc_id", &length);
+			char *state = my_hilink_json_get_string_value(obj, "state", &length);
 			_put_respone_flags = 1;
 
 			bzero(_put_data, 1024);
@@ -172,12 +173,18 @@ int hilink_get_char_state(const char* svc_id, const char* in, unsigned int in_le
 	//char *buf;
 	//asprintf(&buf, "{\"type\":\"profile\", \"cmd\":\"get_char_state\", \"svc_id\":\"%s\", \"payload\":\"%s\"}", svc_id, base64(in));
 	//sprintf(&buf, "{\"type\":\"profile\", \"cmd\":\"get_char_state\", \"svc_id\":\"%s\", \"payload\":\"%s\"}", svc_id, base64(in));
-	int len = (in_len / 3 + 1) * 4 + 1;
-	char base_buf[len];
-	b64_ntop(in, strlen(in) + 1, base_buf, len);
 
 	char buf[1024];
-	sprintf(buf, "{\"type\":\"profile\", \"cmd\":\"get_char_state\", \"svc_id\":\"%s\", \"payload\":\"%s\"}", svc_id, base_buf);
+
+	if (0 != in_len) {
+		int len = (in_len / 3 + 1) * 4 + 1;
+		char base_buf[len];
+		b64_ntop(in, strlen(in) + 1, base_buf, len);
+		sprintf(buf, "{\"type\":\"profile\", \"cmd\":\"get_char_state\", \"svc_id\":\"%s\", \"payload\":\"%s\"}", svc_id, base_buf);
+	} else {	
+		sprintf(buf, "{\"type\":\"profile\", \"cmd\":\"get_char_state\", \"svc_id\":\"%s\", \"payload\":\"%s\"}", svc_id, "");
+	}
+	
 	ret = msg_send(buf, strlen(buf) + 1) > 0 ? 0 : -1;
 	//free(buf);
 	_get_respone_flags = 0;
@@ -186,8 +193,9 @@ int hilink_get_char_state(const char* svc_id, const char* in, unsigned int in_le
 	while(0 == _get_respone_flags) {
 		sleep(1);
 	}
-
-	memcpy(*out, _get_data, strlen(_get_data) + 1);
+	int length = strlen(_get_data);
+	*out = (char *)malloc(sizeof(char) *(length + 1));
+	memcpy(*out, _get_data, length + 1);
 	*out_len = strlen(_get_data);
 	bzero(_get_data, strlen(_get_data) + 1);
 	return 0;
