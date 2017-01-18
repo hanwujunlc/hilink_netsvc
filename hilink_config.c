@@ -167,10 +167,10 @@ int config_profile(svc_info_t *svcs, int svc_len) {
 
 	dev_info_t dev = {
 		sn,
-		"900q",
-		"HBL-25",
+		"1010",
+		"A2",
 		"02E",
-		"001",
+		"034",
 		mac_str,
 		"1.0",
 		"20000",
