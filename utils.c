@@ -28,7 +28,7 @@ int hilink_log(const const char *format, ...) {
     vasprintf(&msg, format, ap);
     va_end(ap);
 
-    if (!daemon_flag) {
+    if (daemon_flag) {
         fprintf(stderr, "%s", msg);
         fprintf(stderr, "%s", "\n");
         fflush(stderr);
