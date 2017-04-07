@@ -42,7 +42,9 @@
 extern "C" {
 #endif
 
+#ifndef HILINK_M2M_MAX_SVC_NUM     
 #define HILINK_M2M_MAX_SVC_NUM     16
+#endif
 
 /******************************************************************************
 ** Hilink Device SDK 对外开放接口

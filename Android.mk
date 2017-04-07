@@ -26,9 +26,9 @@ LOCAL_SRC_FILES := $(src_files)
 LOCAL_C_INCLUDES := $(c_includes)
 LOCAL_LDLIBS    := -lm -llog
 LOCAL_LDFLAGS	:= -pie -fpie
-LOCAL_SHARED_LIBRARIES := libhilinkjson
-LOCAL_STATIC_LIBRARIES := libhilinkdevicesdk
-#LOCAL_LDFLAGS	+= libhilinkdevicesdk.so libhilinkjson.so
+#LOCAL_SHARED_LIBRARIES := libhilinkjson
+#LOCAL_STATIC_LIBRARIES := libhilinkdevicesdk
+LOCAL_LDFLAGS	+= libhilinkdevicesdk.so libhilinkjson.so
 LOCAL_CFLAGS := -pie -FPIE -g
 LOCAL_MODULE := hilink_netsvc
 include $(BUILD_EXECUTABLE)

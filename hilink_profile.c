@@ -28,7 +28,7 @@ int findChildCnt(char* buf, char* str)
     return cnt;
 }
 
-
+extern char tv_code[64];
 int hilink_msg_handler(const char *buf, int len) {
 	//parse buf call json api
 
@@ -38,10 +38,15 @@ int hilink_msg_handler(const char *buf, int len) {
 	int length;
 	char *cmd = my_hilink_json_get_string_value(obj, "cmd", &length);
 	char *type = my_hilink_json_get_string_value(obj, "type", &length); 
-	hilink_log("cmd =  %s, type = %s  !", cmd, type);
+	
+	hilink_log("cmd =  %s, type = %s!", cmd, type);
 
 	if (0 == strcmp(type, "profile")) {
 		if (0 == strcmp(cmd, "start")) {
+			char *bacode = my_hilink_json_get_string_value(obj, "code", &length);
+			bzero(tv_code, 64);
+			memcpy(tv_code, bacode, strlen(bacode) + 1);
+			hilink_log("tv_code  = %s!", tv_code);
 			//hilink_log("hilink_msg_handler start !");
 			char *svc_list = my_hilink_json_get_string_value(obj, "svc_list", &length);
 			//hilink_log("hilink_msg_handler svc_list = %s !", svc_list);
@@ -251,6 +256,12 @@ int hilink_put_char_state(const char* svc_id,
 //******************************related to configuration or upgrade ***************************************** 
 int hilink_notify_wifi_param(char* ssid, unsigned int ssid_len,
 		char* pwd, unsigned int pwd_len, int mode ) {
+	hilink_log("hilink_notify_wifi_param ssid_len = %d, ssid = %s, pwd_len = %d, pwd = %s = %d !", ssid_len, ssid, pwd_len, pwd);
+	char buf[1024];
+	bzero(buf, 1024);
+	sprintf(buf, "{\"type\":\"profile\", \"cmd\":\"notify_wifi_param\", \"ssid\":\"%s\", \"pwd\":\"%s\", \"mode\":\"%d\"}", ssid, pwd, mode);
+	int ret = msg_send(buf, strlen(buf) + 1);
+	
 	return 0;
 }
 
@@ -262,7 +273,7 @@ int hilink_ota_trig(int mode) {
 
 int hilink_ota_get_ver(char** version, int* ver_len) {
 	*version = (char *)malloc(4);
-	strcpy(*version, "1.0");
+	strcpy(*version, "");
 	*ver_len = strlen(*version) + 1;
 
 	return 0;

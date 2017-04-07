@@ -156,6 +156,8 @@ static dev_info_t dev_tv = {
 	1,
 };
 
+char tv_code[64];
+
 int config_profile(svc_info_t *svcs, int svc_len) {
 	static char mac[6], mac_str[32], sn[32];
 	if (fetch_mac("wlan0", mac) == -1) {
@@ -166,7 +168,7 @@ int config_profile(svc_info_t *svcs, int svc_len) {
 	sprintf(mac_str, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
 	static dev_info_t dev = {
-		sn,
+		tv_code,
 		"1010",
 		"A2",
 		"02E",
